@@ -1,35 +1,68 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from "react";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  const [tasks, setTasks] = useState([]);
+  const [input, setInput] = useState("");
+
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("tasks"));
+    if (stored) setTasks(stored);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
+
+  const addTask = () => {
+    if (!input.trim()) return;
+    setTasks([...tasks, { title: input.trim(), completed: false }]);
+    setInput("");
+  };
+
+  const toggleTask = (index) => {
+    const updated = tasks.map((t, i) =>
+      i === index ? { ...t, completed: !t.completed } : t
+    );
+    setTasks(updated);
+  };
+
+  const deleteTask = (index) => {
+    const updated = tasks.filter((_, i) => i !== index);
+    setTasks(updated);
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="container">
+      <h1>My To-Do List</h1>
+
+      <div className="input-group">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Enter a task"
+          onKeyDown={(e) => e.key === "Enter" && addTask()}
+        />
+        <button onClick={addTask}>Add</button>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+
+      <ul>
+        {tasks.map((task, index) => (
+          <li key={index}>
+            <span
+              className={task.completed ? "completed" : ""}
+              onClick={() => toggleTask(index)}
+            >
+              {task.title}
+            </span>
+            <button onClick={() => deleteTask(index)}>❌</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
-export default App
+export default App;
