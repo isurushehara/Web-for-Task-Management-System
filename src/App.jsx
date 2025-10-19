@@ -1,18 +1,21 @@
 import { useState, useEffect } from "react";
 import "./App.css";
-
 import TodoInput from "./components/TodoInput";
 import TodoList from "./components/TodoList";
+import FilterButtons from "./components/FilterButtons";
 
 function App() {
   const [tasks, setTasks] = useState([]);
   const [input, setInput] = useState("");
+  const [filter, setFilter] = useState("all");
 
+  // load from localStorage
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("tasks"));
     if (stored) setTasks(stored);
   }, []);
 
+  // save to localStorage
   useEffect(() => {
     localStorage.setItem("tasks", JSON.stringify(tasks));
   }, [tasks]);
@@ -24,27 +27,46 @@ function App() {
   };
 
   const toggleTask = (index) => {
-    const updated = tasks.map((t, i) =>
-      i === index ? { ...t, completed: !t.completed } : t
+    setTasks((prev) =>
+      prev.map((t, i) =>
+        i === index ? { ...t, completed: !t.completed } : t
+      )
     );
-    setTasks(updated);
   };
 
   const deleteTask = (index) => {
-    const updated = tasks.filter((_, i) => i !== index);
-    setTasks(updated);
+    setTasks((prev) => prev.filter((_, i) => i !== index));
   };
+
+  const editTask = (index, newTitle) => {
+    setTasks((prev) =>
+      prev.map((t, i) =>
+        i === index ? { ...t, title: newTitle } : t
+      )
+    );
+  };
+
+  const clearAll = () => setTasks([]);
+
+  const filteredTasks = tasks.filter((task) => {
+    if (filter === "active") return !task.completed;
+    if (filter === "completed") return task.completed;
+    return true;
+  });
 
   return (
     <div className="container">
-      <h1>My To-Do List</h1>
+      <h1>📝 Smart To-Do App</h1>
 
       <TodoInput input={input} setInput={setInput} addTask={addTask} />
 
+      <FilterButtons setFilter={setFilter} clearAll={clearAll} />
+
       <TodoList
-        tasks={tasks}
+        tasks={filteredTasks}
         toggleTask={toggleTask}
         deleteTask={deleteTask}
+        editTask={editTask}
       />
     </div>
   );
