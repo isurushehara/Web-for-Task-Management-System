@@ -3,47 +3,39 @@ import "./App.css";
 import TodoInput from "./components/TodoInput";
 import TodoList from "./components/TodoList";
 import FilterButtons from "./components/FilterButtons";
+import { loadTasks, saveTasks } from "./utils/storage";
 
 function App() {
-  const [tasks, setTasks] = useState([]);
+  // ✅ loadTasks() runs immediately to set initial state
+  const [tasks, setTasks] = useState(() => loadTasks());
   const [input, setInput] = useState("");
   const [filter, setFilter] = useState("all");
 
-  // load from localStorage
+  // ✅ Save every time tasks change
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("tasks"));
-    if (stored) setTasks(stored);
-  }, []);
-
-  // save to localStorage
-  useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
+    saveTasks(tasks);
   }, [tasks]);
 
   const addTask = () => {
     if (!input.trim()) return;
-    setTasks([...tasks, { title: input.trim(), completed: false }]);
+    setTasks([...tasks, { id: Date.now(), title: input.trim(), completed: false }]);
     setInput("");
   };
 
-  const toggleTask = (index) => {
-    setTasks((prev) =>
-      prev.map((t, i) =>
-        i === index ? { ...t, completed: !t.completed } : t
-      )
-    );
+  const toggleTask = (id) => {
+    setTasks(tasks.map((t) =>
+      t.id === id ? { ...t, completed: !t.completed } : t
+    ));
   };
 
-  const deleteTask = (index) => {
-    setTasks((prev) => prev.filter((_, i) => i !== index));
+  const deleteTask = (id) => {
+    setTasks(tasks.filter((t) => t.id !== id));
   };
 
-  const editTask = (index, newTitle) => {
-    setTasks((prev) =>
-      prev.map((t, i) =>
-        i === index ? { ...t, title: newTitle } : t
-      )
-    );
+  const editTask = (id, newTitle) => {
+    setTasks(tasks.map((t) =>
+      t.id === id ? { ...t, title: newTitle } : t
+    ));
   };
 
   const clearAll = () => setTasks([]);

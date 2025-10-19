@@ -1,12 +1,12 @@
 import { useState } from "react";
 
-function TodoItem({ task, index, toggleTask, deleteTask, editTask }) {
+function TodoItem({ task, toggleTask, deleteTask, editTask }) {
   const [isEditing, setIsEditing] = useState(false);
   const [newTitle, setNewTitle] = useState(task.title);
 
   const handleEdit = () => {
     if (!newTitle.trim()) return;
-    editTask(index, newTitle);
+    editTask(task.id, newTitle);
     setIsEditing(false);
   };
 
@@ -27,13 +27,13 @@ function TodoItem({ task, index, toggleTask, deleteTask, editTask }) {
         <>
           <span
             className={task.completed ? "completed" : ""}
-            onClick={() => toggleTask(index)}
+            onClick={() => toggleTask(task.id)}
           >
             {task.title}
           </span>
           <div className="actions">
             <button onClick={() => setIsEditing(true)}>✏️</button>
-            <button onClick={() => deleteTask(index)}>❌</button>
+            <button onClick={() => deleteTask(task.id)}>❌</button>
           </div>
         </>
       )}
