@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 
-function App() {
+import TodoInput from "./components/TodoInput";
+import TodoList from "./components/TodoList";
 
+function App() {
   const [tasks, setTasks] = useState([]);
   const [input, setInput] = useState("");
 
@@ -37,30 +39,13 @@ function App() {
     <div className="container">
       <h1>My To-Do List</h1>
 
-      <div className="input-group">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Enter a task"
-          onKeyDown={(e) => e.key === "Enter" && addTask()}
-        />
-        <button onClick={addTask}>Add</button>
-      </div>
+      <TodoInput input={input} setInput={setInput} addTask={addTask} />
 
-      <ul>
-        {tasks.map((task, index) => (
-          <li key={index}>
-            <span
-              className={task.completed ? "completed" : ""}
-              onClick={() => toggleTask(index)}
-            >
-              {task.title}
-            </span>
-            <button onClick={() => deleteTask(index)}>❌</button>
-          </li>
-        ))}
-      </ul>
+      <TodoList
+        tasks={tasks}
+        toggleTask={toggleTask}
+        deleteTask={deleteTask}
+      />
     </div>
   );
 }
