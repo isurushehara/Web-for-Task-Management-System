@@ -1,66 +1,65 @@
 import { useState, useEffect } from "react";
 import "./App.css";
+import TodoInput from "./components/TodoInput";
+import TodoList from "./components/TodoList";
+import FilterButtons from "./components/FilterButtons";
+import { loadTasks, saveTasks } from "./utils/storage";
 
 function App() {
-
-  const [tasks, setTasks] = useState([]);
+  // ✅ loadTasks() runs immediately to set initial state
+  const [tasks, setTasks] = useState(() => loadTasks());
   const [input, setInput] = useState("");
+  const [filter, setFilter] = useState("all");
 
+  // ✅ Save every time tasks change
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("tasks"));
-    if (stored) setTasks(stored);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
+    saveTasks(tasks);
   }, [tasks]);
 
   const addTask = () => {
     if (!input.trim()) return;
-    setTasks([...tasks, { title: input.trim(), completed: false }]);
+    setTasks([...tasks, { id: Date.now(), title: input.trim(), completed: false }]);
     setInput("");
   };
 
-  const toggleTask = (index) => {
-    const updated = tasks.map((t, i) =>
-      i === index ? { ...t, completed: !t.completed } : t
-    );
-    setTasks(updated);
+  const toggleTask = (id) => {
+    setTasks(tasks.map((t) =>
+      t.id === id ? { ...t, completed: !t.completed } : t
+    ));
   };
 
-  const deleteTask = (index) => {
-    const updated = tasks.filter((_, i) => i !== index);
-    setTasks(updated);
+  const deleteTask = (id) => {
+    setTasks(tasks.filter((t) => t.id !== id));
   };
+
+  const editTask = (id, newTitle) => {
+    setTasks(tasks.map((t) =>
+      t.id === id ? { ...t, title: newTitle } : t
+    ));
+  };
+
+  const clearAll = () => setTasks([]);
+
+  const filteredTasks = tasks.filter((task) => {
+    if (filter === "active") return !task.completed;
+    if (filter === "completed") return task.completed;
+    return true;
+  });
 
   return (
     <div className="container">
-      <h1>My To-Do List</h1>
+      <h1>📝 Smart To-Do App</h1>
 
-      <div className="input-group">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Enter a task"
-          onKeyDown={(e) => e.key === "Enter" && addTask()}
-        />
-        <button onClick={addTask}>Add</button>
-      </div>
+      <TodoInput input={input} setInput={setInput} addTask={addTask} />
 
-      <ul>
-        {tasks.map((task, index) => (
-          <li key={index}>
-            <span
-              className={task.completed ? "completed" : ""}
-              onClick={() => toggleTask(index)}
-            >
-              {task.title}
-            </span>
-            <button onClick={() => deleteTask(index)}>❌</button>
-          </li>
-        ))}
-      </ul>
+      <FilterButtons setFilter={setFilter} clearAll={clearAll} />
+
+      <TodoList
+        tasks={filteredTasks}
+        toggleTask={toggleTask}
+        deleteTask={deleteTask}
+        editTask={editTask}
+      />
     </div>
   );
 }
