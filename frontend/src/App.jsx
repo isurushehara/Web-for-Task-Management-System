@@ -77,8 +77,13 @@ function App() {
         tasks={filteredTasks}
         toggleTask={(id) => {
           const task = tasks.find((t) => t._id === id);
+          if (!task) {
+            console.error("Task not found:", id);
+            return;
+          }
           handleUpdate(id, { completed: !task.completed });
         }}
+
         deleteTask={handleDelete}
         editTask={(id, newTitle) => handleUpdate(id, { title: newTitle })}
       />
