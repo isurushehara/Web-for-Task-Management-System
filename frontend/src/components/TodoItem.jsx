@@ -33,7 +33,7 @@ function TodoItem({ task, toggleTask, deleteTask, editTask }) {
           </span>
           <div className="actions">
             <button onClick={() => setIsEditing(true)}>✏️</button>
-            <button onClick={() => deleteTask(task.id)}>❌</button>
+            <button onClick={() => deleteTask(task._id)}>❌</button>
           </div>
         </>
       )}
