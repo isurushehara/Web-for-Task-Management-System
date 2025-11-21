@@ -1,44 +1,62 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import TodoInput from "./components/TodoInput";
 import TodoList from "./components/TodoList";
 import FilterButtons from "./components/FilterButtons";
-import { loadTasks, saveTasks } from "./utils/storage";
+import { getTasks, createTask, updateTask, deleteTask } from "./api/taskApi";
 
 function App() {
-  // ✅ loadTasks() runs immediately to set initial state
-  const [tasks, setTasks] = useState(() => loadTasks());
+  const [tasks, setTasks] = useState([]);
   const [input, setInput] = useState("");
   const [filter, setFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
 
-  // ✅ Save every time tasks change
+  // ✅ Load tasks from API
   useEffect(() => {
-    saveTasks(tasks);
-  }, [tasks]);
+    const fetchTasks = async () => {
+      try {
+        const data = await getTasks();
+        setTasks(data);
+      } catch (err) {
+        console.error("Error fetching tasks:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTasks();
+  }, []);
 
-  const addTask = () => {
+  // ✅ Create task
+  const addTask = async () => {
     if (!input.trim()) return;
-    setTasks([...tasks, { id: Date.now(), title: input.trim(), completed: false }]);
-    setInput("");
+    try {
+      const newTask = await createTask(input);
+      setTasks([...tasks, newTask]);
+      setInput("");
+    } catch (err) {
+      console.error("Error creating task:", err);
+    }
   };
 
-  const toggleTask = (id) => {
-    setTasks(tasks.map((t) =>
-      t.id === id ? { ...t, completed: !t.completed } : t
-    ));
+  // ✅ Toggle or edit task
+  const handleUpdate = async (id, updatedData) => {
+    try {
+      const updatedTask = await updateTask(id, updatedData);
+      setTasks(tasks.map((t) => (t._id === id ? updatedTask : t)));
+    } catch (err) {
+      console.error("Error updating task:", err);
+    }
   };
 
-  const deleteTask = (id) => {
-    setTasks(tasks.filter((t) => t.id !== id));
+  // ✅ Delete task
+  const handleDelete = async (id) => {
+    try {
+      await deleteTask(id);
+      setTasks(tasks.filter((t) => t._id !== id));
+    } catch (err) {
+      console.error("Error deleting task:", err);
+    }
   };
-
-  const editTask = (id, newTitle) => {
-    setTasks(tasks.map((t) =>
-      t.id === id ? { ...t, title: newTitle } : t
-    ));
-  };
-
-  const clearAll = () => setTasks([]);
 
   const filteredTasks = tasks.filter((task) => {
     if (filter === "active") return !task.completed;
@@ -46,19 +64,23 @@ function App() {
     return true;
   });
 
+  if (loading) return <p>Loading tasks...</p>;
+
   return (
     <div className="container">
-      <h1>📝 Smart To-Do App</h1>
+      <h1>🌐 Full Stack To-Do App</h1>
 
       <TodoInput input={input} setInput={setInput} addTask={addTask} />
-
-      <FilterButtons setFilter={setFilter} clearAll={clearAll} />
+      <FilterButtons setFilter={setFilter} clearAll={() => setTasks([])} />
 
       <TodoList
         tasks={filteredTasks}
-        toggleTask={toggleTask}
-        deleteTask={deleteTask}
-        editTask={editTask}
+        toggleTask={(id) => {
+          const task = tasks.find((t) => t._id === id);
+          handleUpdate(id, { completed: !task.completed });
+        }}
+        deleteTask={handleDelete}
+        editTask={(id, newTitle) => handleUpdate(id, { title: newTitle })}
       />
     </div>
   );
