@@ -6,7 +6,7 @@ function TodoItem({ task, toggleTask, deleteTask, editTask }) {
 
   const handleEdit = () => {
     if (!newTitle.trim()) return;
-    editTask(task.id, newTitle);
+    editTask(task._id, newTitle);
     setIsEditing(false);
   };
 
@@ -27,13 +27,14 @@ function TodoItem({ task, toggleTask, deleteTask, editTask }) {
         <>
           <span
             className={task.completed ? "completed" : ""}
-            onClick={() => toggleTask(task.id)}
+            onClick={() => toggleTask(task._id)}
           >
             {task.title}
           </span>
+
           <div className="actions">
             <button onClick={() => setIsEditing(true)}>✏️</button>
-            <button onClick={() => deleteTask(task.id)}>❌</button>
+            <button onClick={() => deleteTask(task._id)}>❌</button>
           </div>
         </>
       )}

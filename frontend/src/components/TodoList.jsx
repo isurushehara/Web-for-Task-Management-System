@@ -7,7 +7,7 @@ function TodoList({ tasks, toggleTask, deleteTask, editTask }) {
     <ul>
       {tasks.map((task) => (
         <TodoItem
-          key={task.id}
+          key={task._id}
           task={task}
           toggleTask={toggleTask}
           deleteTask={deleteTask}
