@@ -1,52 +1,77 @@
 import express from "express";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "secret123";
 
+// Apply protect middleware to all task routes
+router.use(protect);
+
+// When creating a task, attach user
+router.post("/", async (req, res) => {
+    const { title } = req.body;
+    try {
+        const newTask = await Task.create({ title, user: req.user._id });
+        res.status(201).json(newTask);
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// When fetching tasks, get only for logged-in user
+router.get("/", async (req, res) => {
+    try {
+        const tasks = await Task.find({ user: req.user._id });
+        res.json(tasks);
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 // SIGNUP
 router.post("/signup", async (req, res) => {
-  const { username, email, password } = req.body;
-  try {
-    const userExists = await User.findOne({ email });
-    if (userExists) return res.status(400).json({ message: "User already exists" });
+    const { username, email, password } = req.body;
+    try {
+        const userExists = await User.findOne({ email });
+        if (userExists) return res.status(400).json({ message: "User already exists" });
 
-    const user = await User.create({ username, email, password });
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "7d" });
+        const user = await User.create({ username, email, password });
+        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "7d" });
 
-    res.status(201).json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      token,
-    });
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
+        res.status(201).json({
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            token,
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
 });
 
 // LOGIN
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    const { email, password } = req.body;
+    try {
+        const user = await User.findOne({ email });
+        if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
-    const isMatch = await user.matchPassword(password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+        const isMatch = await user.matchPassword(password);
+        if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "7d" });
+        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "7d" });
 
-    res.json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      token,
-    });
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
+        res.json({
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            token,
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
 });
 
 export default router;
