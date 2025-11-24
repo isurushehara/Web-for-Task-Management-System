@@ -1,34 +1,9 @@
 import express from "express";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
-import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "secret123";
-
-// Apply protect middleware to all task routes
-router.use(protect);
-
-// When creating a task, attach user
-router.post("/", async (req, res) => {
-    const { title } = req.body;
-    try {
-        const newTask = await Task.create({ title, user: req.user._id });
-        res.status(201).json(newTask);
-    } catch (err) {
-        res.status(500).json({ message: "Server error" });
-    }
-});
-
-// When fetching tasks, get only for logged-in user
-router.get("/", async (req, res) => {
-    try {
-        const tasks = await Task.find({ user: req.user._id });
-        res.json(tasks);
-    } catch (err) {
-        res.status(500).json({ message: "Server error" });
-    }
-});
 
 // SIGNUP
 router.post("/signup", async (req, res) => {
@@ -47,6 +22,7 @@ router.post("/signup", async (req, res) => {
             token,
         });
     } catch (err) {
+        console.error("Signup error:", err);
         res.status(500).json({ message: "Server error", error: err.message });
     }
 });
@@ -70,6 +46,7 @@ router.post("/login", async (req, res) => {
             token,
         });
     } catch (err) {
+        console.error("Login error:", err);
         res.status(500).json({ message: "Server error", error: err.message });
     }
 });
